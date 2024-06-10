@@ -1,0 +1,11 @@
+services:
+  app:
+    build: ./
+    image: gkontsevik/transport_frames:0.1.1
+    env_file:
+      - .env
+    volumes:
+      - ./:/usr/app/
+    platform: linux/amd64
+    ports:
+      - 8000:8000

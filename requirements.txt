@@ -1,0 +1,9 @@
+fastapi==0.110.0
+psycopg2-binary==2.9.5
+uvicorn==0.27.1
+loguru
+# ortools>=9.9.3963
+sqlalchemy
+# folium
+git+https://github.com/alexandermorozzov/transport_frames.git@dev
+# dev
