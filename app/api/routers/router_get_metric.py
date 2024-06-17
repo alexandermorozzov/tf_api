@@ -50,23 +50,23 @@ def read_json_file(filename):
 
 # /Users/test/Documents/code/tf_api/app/db/indicators/Ленинградская_область/Ленинградская область_indicators_gpsp.json
 
-def read_region_file(region_name, indicator_name:str):
+async def read_region_file(region_name, indicator_name:str):
     cwd = os.getcwd()
     parents = pathlib.Path(cwd)
     path = str(parents) + f'/app/db/indicators/{region_name}/{region_name}_indicators_{indicator_name}.json'
     file = read_json_file(path)
-    return file[list(file)[0]].to_json()
+    return json.loads(file[list(file)[0]].to_json())
 
-
-@router.get("/get_gpsp/")
-def get_d0(query_params: Region=Depends()):   
-    return read_region_file(query_params.region.value, "gpsp")
-    
-@router.get("/get_mr/")
-def get_d1(query_params: Region=Depends()):   
-    return read_region_file(query_params.region.value, "mr")
 
 @router.get("/get_region/")
-def get_d2(query_params: Region=Depends()):   
-    return read_region_file(query_params.region.value, "region")
+async def get_d0(query_params: Region=Depends()):   
+    return await read_region_file(query_params.region.value, "gpsp")
+    
+@router.get("/get_mr/")
+async def get_d1(query_params: Region=Depends()):   
+    return await read_region_file(query_params.region.value, "mr")
+
+@router.get("/get_gpsp/")
+async def get_d2(query_params: Region=Depends()):   
+    return await read_region_file(query_params.region.value, "region")
     
