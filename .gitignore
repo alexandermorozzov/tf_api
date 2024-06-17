@@ -146,3 +146,5 @@ cache/
 # PyCharm env
 .idea
 /app/api/routers/lo_gdfs
+
+# ./db
