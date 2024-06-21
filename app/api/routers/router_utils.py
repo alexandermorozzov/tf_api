@@ -3,12 +3,12 @@ import networkx as nx
 import osmnx as ox
 from transport_frames.src.graph_builder import graphbuilder
 
-data_path = 'app/api/routers/lo_gdfs/'
+data_path = 'app/api/routers/indicators/'
 general_crs=4326
 
-def load_gdf(name:str):
+def load_parquet(name:str):
     print('loading:  ', name)
-    return gpd.read_file(data_path+name+'.geojson')
+    return gpd.read_parquet(name+'.parquet')
 
 def load_graphml(name:str):
     print('loading:  ', name)

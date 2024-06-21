@@ -10,3 +10,9 @@ class AvailableRegions(str, Enum):
     spb = 'Санкт-Петербург'
     tuo = 'Тульская_область'
     tumo = 'Тюменская_область'
+
+class Level(str,Enum):
+    region = 'region'
+    district = 'districts'
+    settlements = 'settlements'
+    territory = 'territory'
