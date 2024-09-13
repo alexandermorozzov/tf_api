@@ -9,12 +9,9 @@ from fastapi.responses import HTMLResponse
 
 from contextlib import suppress
 
-from app.scripts.calculate_metric import calculate_tf_d1
-
 from app.exceptions.exceptions import OutOfBoundaryError
 from .router_utils import load_parquet
 #  load_gdf, load_graphml, load_main_city_center_node, load_region, load_country, get_region_roads_g, general_crs
-from transport_frames.src.metrics import indicators
 
 
 

@@ -1,7 +1,6 @@
 import geopandas as gpd
 import networkx as nx
 import osmnx as ox
-from transport_frames.src.graph_builder import graphbuilder
 
 data_path = 'app/api/routers/indicators/'
 general_crs=4326

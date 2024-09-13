@@ -6,6 +6,7 @@ from loguru import logger
 import sys
 
 from app.api.routers import router_get_metric
+from app.api.routers import router_interpretation_criteria
 
 logger.remove()
 logger.add(
@@ -28,3 +29,4 @@ app.add_middleware(
 )
 
 app.include_router(router_get_metric.router, prefix="/api_v1")
+app.include_router(router_interpretation_criteria.router, prefix="/api_v1")
