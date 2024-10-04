@@ -14,7 +14,7 @@ class InterpretationRequest(BaseModel):
     car_access_quartile: int = Field(ge=1, le=4, title="Квартиль доступности для личного транспорта (от 1 до 4)", examples=[1])
     public_access_quartile: int = Field(ge=1, le=4, title="Квартиль доступности для общественного транспорта (от 1 до 4)", examples=[1])
 
-@router.get("/interpretation")
+@router.get('/interpretation')
 def criteria_interpretation(request: InterpretationRequest = Depends()) -> list[str]:
     result = advanced_grade.interpretation(
             request.grade,  
