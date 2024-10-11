@@ -7,5 +7,5 @@ sqlalchemy
 folium
 momepy
 pandera
-git+https://github.com/alexandermorozzov/transport_frames.git@feat/api
+git+https://github.com/alexandermorozzov/transport_frames.git@master
 git+https://github.com/vasilstar97/idu-clients.git@main
