@@ -4,6 +4,7 @@ import geopandas as gpd
 import osmnx as ox 
 import networkx as nx
 import pickle
+from loguru import logger
 from app.api.utils.constants import REGIONS_DICT, REGIONS_CRS, DATA_PATH
 from transport_frames.graphbuilder.graph import Graph
 
@@ -32,9 +33,9 @@ def process_graph():
         exists, graph_file = check_graph_exists(region_id)
         
         if exists:
-            print(f'Graph for {region_name} already exists.')
+            logger.info(f'Graph for {region_name} already exists.')
         else:
-            print(f'Graph for {region_name} not found. Creating...')
+            logger.info(f'Graph for {region_name} not found. Creating...')
             
             polygon_file = os.path.join(DATA_PATH, f'polygons/{region_id}_polygon_for_graph.parquet')
             if os.path.exists(polygon_file):
@@ -44,6 +45,6 @@ def process_graph():
                 graph_file = os.path.join(DATA_PATH, f'graphs/{region_id}_car_graph.pickle')
                 to_pickle(graph, graph_file)
                 
-                print(f'Graph for {region_name} has been successfully created.')
+                logger.success(f'Graph for {region_name} has been successfully created.')
             else:
-                print(f'Polygon file for region {region_name} not found: {polygon_file}')
+                logger.info(f'Polygon file for region {region_name} not found: {polygon_file}')

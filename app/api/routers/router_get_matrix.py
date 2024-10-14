@@ -14,19 +14,19 @@ class AccessibilityMatrixModel(BaseModel):
     values: list[list[float]]
 
 
-def load_matrix(region_id: int, matrix_type: Literal['car', 'inter']):
-    matrix_path = os.path.join(DATA_PATH, f'matrices/{region_id}_{matrix_type}_matrix.pickle')
+def load_matrix(region_id: int, graph_type: Literal['car', 'inter']):
+    matrix_path = os.path.join(DATA_PATH, f'matrices/{region_id}_{graph_type}_matrix.pickle')
     
     try:
         with open(matrix_path, 'rb') as f:
             matrix = pickle.load(f)
         return matrix
     except FileNotFoundError:
-        raise HTTPException(status_code=404, detail=f"{matrix_type.capitalize()} matrix file not found for region {region_id}")
+        raise HTTPException(status_code=404, detail=f"{graph_type.capitalize()} matrix file not found for region {region_id}")
 
-@router.get('/{region_id}/{matrix_type}/get_matrix', response_model=AccessibilityMatrixModel)
-def get_accessibility_matrix(region_id: int, matrix_type: Literal['car', 'inter']) -> AccessibilityMatrixModel:
-    matrix = load_matrix(region_id, matrix_type)
+@router.get('/{region_id}/get_matrix', response_model=AccessibilityMatrixModel)
+def get_accessibility_matrix(region_id: int, graph_type: Literal['car', 'inter']) -> AccessibilityMatrixModel:
+    matrix = load_matrix(region_id, graph_type)
     
     res = {
         'index': matrix.index,
