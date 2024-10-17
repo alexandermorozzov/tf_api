@@ -9,6 +9,7 @@ from app.api.utils import get_graphs
 from app.api.utils import get_matrix
 from app.api.routers import router_interpretation_criteria
 from app.api.routers import router_get_matrix
+from app.api.routers import router_recalculate_matrix
 
 logger.remove()
 logger.add(
@@ -32,6 +33,7 @@ app.add_middleware(
 
 app.include_router(router_interpretation_criteria.router, prefix="/api_v1")
 app.include_router(router_get_matrix.router, prefix="/api_v1")
+app.include_router(router_recalculate_matrix.router, prefix="/api_v1.1")
 
 @app.on_event("startup")
 async def startup_event():

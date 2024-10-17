@@ -16,7 +16,7 @@ def check_graph_exists(region_id : int):
 def create_graph(region_id : int, polygon : gpd.GeoDataFrame):
     crs = REGIONS_CRS[region_id]
     g = Graph.from_polygon(polygon, crs=f'{crs}')
-    return g
+    return g.graph
 
 def read_graph_pickle(file_path: str) -> nx.Graph:
     state = None

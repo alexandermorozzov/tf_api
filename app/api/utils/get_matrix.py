@@ -49,28 +49,20 @@ def calculate_accessibility_matrix(graph, points, local_crs, region_id, matrix_t
         raise RuntimeError(f"Error calculating the {matrix_type} matrix for region {region_name}: {str(e)}")
 
 async def process_matrix():
-    for region_id, region_name in REGIONS_DICT.items():
-        local_crs = REGIONS_CRS[region_id]
-        logger.info(f"Load car graph for {region_name}...")
-        car_graph = load_graph(region_id, 'car')
-        car_matrix_exists, car_matrix_file = check_matrix_exists(region_id, 'car')
-        if car_matrix_exists:
-            logger.info(f"Car matrix for {region_name} already exists.")
-        else:
-            logger.info(f"Car matrix for {region_name} not found. Creating...")
-            points = await load_settlement_points(region_id)
-            car_acc_mx = calculate_accessibility_matrix(car_graph.graph, points, local_crs, region_id, 'car')
-            to_pickle(car_acc_mx, car_matrix_file)
-            logger.success(f'Car matrix for {region_name} has been successfully created.')
+    async def process_graph(region_id, region_name, graph_type):
+        matrix_exists, matrix_file = check_matrix_exists(region_id, graph_type)
 
-        logger.info(f"Load intermodal graph for {region_name}...")
-        inter_graph = load_graph(region_id, 'inter')
-        inter_matrix_exists, inter_matrix_file = check_matrix_exists(region_id, 'inter')
-        if inter_matrix_exists:
-            logger.info(f"Intermodal matrix for {region_name} already exists.")
+        if matrix_exists:
+            logger.info(f"{graph_type.capitalize()} matrix for {region_name} already exists.")
         else:
-            logger.info(f"Intermodal matrix for {region_name} not found. Creating...")
+            logger.info(f"{graph_type.capitalize()} matrix for {region_name} not found. Creating...")
+            graph = load_graph(region_id, graph_type)
             points = await load_settlement_points(region_id)
-            inter_acc_mx = calculate_accessibility_matrix(inter_graph, points, local_crs, region_id, 'inter')
-            to_pickle(inter_acc_mx, inter_matrix_file)
-            logger.success(f'Intermodal matrix for {region_name} has been successfully created.')
+            local_crs = REGIONS_CRS[region_id]
+            acc_matrix = calculate_accessibility_matrix(graph, points, local_crs, region_id, graph_type)
+            to_pickle(acc_matrix, matrix_file)
+            logger.success(f'{graph_type.capitalize()} matrix for {region_name} has been successfully created.')
+
+    for region_id, region_name in REGIONS_DICT.items():
+        await process_graph(region_id, region_name, 'car')
+        await process_graph(region_id, region_name, 'inter')
