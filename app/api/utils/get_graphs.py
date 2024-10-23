@@ -12,6 +12,7 @@ from transport_frames.graphbuilder.graph import Graph
 
 def check_graph_exists(region_id : int):
     graph_file = os.path.join(DATA_PATH, f'graphs/{region_id}_car_graph.pickle')
+    print(DATA_PATH)
     return os.path.exists(graph_file), graph_file
 
 def create_graph(region_id : int, polygon : gpd.GeoDataFrame):
@@ -43,11 +44,13 @@ def process_graph():
             logger.info(f'Car graph for {region_name} not found. Creating...')
             
             polygon_file = os.path.join(DATA_PATH, f'polygons/{region_id}_polygon_for_graph.parquet')
+            print(DATA_PATH)
             if os.path.exists(polygon_file):
                 polygon = gpd.read_parquet(polygon_file)
 
                 graph = create_graph(region_id, polygon)
                 graph_file = os.path.join(DATA_PATH, f'graphs/{region_id}_car_graph.pickle')
+                print(DATA_PATH)
                 to_pickle(graph, graph_file)
                 
                 logger.success(f'Car graph for {region_name} has been successfully created.')
