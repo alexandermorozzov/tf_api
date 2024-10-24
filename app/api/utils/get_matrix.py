@@ -10,10 +10,8 @@ from transport_frames.indicators.utils import availability_matrix
 
 def load_graph(region_id: int, graph_type: str):
     graph_file = os.path.join(DATA_PATH, f'graphs/{region_id}_{graph_type}_graph.pickle')
-    print(DATA_PATH)
     if not os.path.exists(graph_file):
         region_name = REGIONS_DICT.get(region_id, f"Region ID {region_id}")
-        print(REGIONS_DICT)
         raise FileNotFoundError(f"{graph_type.capitalize()} graph for {region_name} not found.")
     
     with open(graph_file, "rb") as f:
@@ -23,7 +21,6 @@ def load_graph(region_id: int, graph_type: str):
 
 def check_matrix_exists(region_id: int, matrix_type: str):
     matrix_file = os.path.join(DATA_PATH, f'matrices/{region_id}_{matrix_type}_matrix.pickle')
-    print(DATA_PATH)
     return os.path.exists(matrix_file), matrix_file
 
 async def load_settlement_points(region_id: int) -> gpd.GeoDataFrame:
@@ -32,7 +29,6 @@ async def load_settlement_points(region_id: int) -> gpd.GeoDataFrame:
     
     if not gdfs_dict:
         region_name = REGIONS_DICT.get(region_id, f"Region ID {region_id}")
-        print(REGIONS_DICT)
         raise FileNotFoundError(f"Territories for {region_name} not found.")
     
     last_key, last_value = list(gdfs_dict.items())[-1]

@@ -9,20 +9,21 @@ from loguru import logger
 from app.api.utils.constants import REGIONS_DICT, REGIONS_CRS, DATA_PATH
 from transport_frames.graphbuilder.graph import Graph
 
+MAX_TRIES = 3
 
 def check_graph_exists(region_id : int):
     graph_file = os.path.join(DATA_PATH, f'graphs/{region_id}_car_graph.pickle')
-    print(DATA_PATH)
     return os.path.exists(graph_file), graph_file
 
 def create_graph(region_id : int, polygon : gpd.GeoDataFrame):
     crs = REGIONS_CRS[region_id]
-    try:
-        g = Graph.from_polygon(polygon, crs=f'{crs}')
-        return g.graph
-    except json.decoder.JSONDecodeError as e:
-        logger.error(f"Error decoding JSON response for region {region_id}: {e}")
-        raise
+    # for _ in range(0, MAX_TRIES):
+    while True:
+        try:
+            g = Graph.from_polygon(polygon, crs=f'{crs}')
+            return g.graph
+        except json.decoder.JSONDecodeError as e:
+            logger.error(f"Error decoding JSON response for region {region_id}: {e}. Retrying...")
 
 def read_graph_pickle(file_path: str) -> nx.Graph:
     state = None
@@ -44,13 +45,11 @@ def process_graph():
             logger.info(f'Car graph for {region_name} not found. Creating...')
             
             polygon_file = os.path.join(DATA_PATH, f'polygons/{region_id}_polygon_for_graph.parquet')
-            print(DATA_PATH)
             if os.path.exists(polygon_file):
                 polygon = gpd.read_parquet(polygon_file)
 
                 graph = create_graph(region_id, polygon)
                 graph_file = os.path.join(DATA_PATH, f'graphs/{region_id}_car_graph.pickle')
-                print(DATA_PATH)
                 to_pickle(graph, graph_file)
                 
                 logger.success(f'Car graph for {region_name} has been successfully created.')
