@@ -19,7 +19,7 @@ RUN set -eux \
         python3-dev \
         cmake \
     && pip install --upgrade pip setuptools wheel \
-    && pip install -r /usr/app/requirements.txt \
+    && pip install --no-cache-dir -r /usr/app/requirements.txt \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /root/.cache/pip
 

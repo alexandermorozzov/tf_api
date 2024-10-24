@@ -39,3 +39,4 @@ app.include_router(router_recalculate_matrix.router, prefix="/api_v1.1")
 async def startup_event():
     get_graphs.process_graph()
     await get_matrix.process_matrix()
+    await get_graphs.process_frames()
