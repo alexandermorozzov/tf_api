@@ -15,12 +15,12 @@ class RecalculateMatrixResponse(BaseModel):
     message: str
     matrix_file: str
 
-async def calc_matrix(region_id: int, graph_type: str, matrix_file: str):
+def calc_matrix(region_id: int, graph_type: str, matrix_file: str):
     region_name = REGIONS_DICT.get(region_id, f"Region ID {region_id}")
     
     try:
         graph = load_graph(region_id, graph_type)
-        points = await load_settlement_points(region_id)
+        points = load_settlement_points(region_id)
         local_crs = REGIONS_CRS[region_id]
         acc_matrix = calculate_accessibility_matrix(graph, points, local_crs, region_id, graph_type)
         to_pickle(acc_matrix, matrix_file)

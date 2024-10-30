@@ -1,6 +1,7 @@
 fastapi==0.110.0
 psycopg2-binary==2.9.5
 uvicorn==0.27.1
+pydantic-geojson==0.1.1
 loguru
 pyarrow
 sqlalchemy
@@ -8,4 +9,3 @@ folium
 momepy
 pandera
 git+https://github.com/alexandermorozzov/transport_frames.git@master
-git+https://github.com/vasilstar97/idu-clients.git@main

@@ -3,13 +3,16 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from typing import Union
 from loguru import logger
+import os
 import sys
 
+from app.api.utils.constants import DATA_PATH
 from app.api.utils import get_graphs
 from app.api.utils import get_matrix
 from app.api.routers import router_interpretation_criteria
 from app.api.routers import router_get_matrix
 from app.api.routers import router_recalculate_matrix
+from app.api.routers import router_transport_indicator
 
 logger.remove()
 logger.add(
@@ -34,9 +37,22 @@ app.add_middleware(
 app.include_router(router_interpretation_criteria.router, prefix="/api_v1")
 app.include_router(router_get_matrix.router, prefix="/api_v1")
 app.include_router(router_recalculate_matrix.router, prefix="/api_v1.1")
+app.include_router(router_transport_indicator.router, prefix='/api_v1.2')
+
+def create_required_directories():
+        required_dirs = ['matrices', 'frames', 'graphs']
+        for dir_name in required_dirs:
+            dir_path = os.path.join(DATA_PATH, dir_name)
+            if not os.path.exists(dir_path):
+                os.makedirs(dir_path) 
+                logger.info(f"Folder created: {dir_path}")
+            else:
+                logger.info(f"Folder already exists: {dir_path}")
+
 
 @app.on_event("startup")
 async def startup_event():
+    create_required_directories()
     get_graphs.process_graph()
-    await get_matrix.process_matrix()
-    await get_graphs.process_frames()
+    get_matrix.process_matrix()
+    get_graphs.process_frames()

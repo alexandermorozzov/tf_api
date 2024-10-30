@@ -5,7 +5,7 @@ import pickle
 from loguru import logger
 from shapely.geometry import Point
 from app.api.utils.constants import REGIONS_DICT, REGIONS_CRS, DATA_PATH
-from idu_clients import UrbanAPI
+from app.api.utils.urban_api import get_region_territories
 from transport_frames.indicators.utils import availability_matrix
 
 def load_graph(region_id: int, graph_type: str):
@@ -23,9 +23,8 @@ def check_matrix_exists(region_id: int, matrix_type: str):
     matrix_file = os.path.join(DATA_PATH, f'matrices/{region_id}_{matrix_type}_matrix.pickle')
     return os.path.exists(matrix_file), matrix_file
 
-async def load_settlement_points(region_id: int) -> gpd.GeoDataFrame:
-    urban_api = UrbanAPI('http://10.32.1.107:5300')
-    gdfs_dict = await urban_api.get_region_territories(region_id)
+def load_settlement_points(region_id: int) -> gpd.GeoDataFrame:
+    gdfs_dict = get_region_territories(region_id)
     
     if not gdfs_dict:
         region_name = REGIONS_DICT.get(region_id, f"Region ID {region_id}")
@@ -48,8 +47,8 @@ def calculate_accessibility_matrix(graph, points, local_crs, region_id, matrix_t
         region_name = REGIONS_DICT.get(region_id, f"Region ID {region_id}")
         raise RuntimeError(f"Error calculating the {matrix_type} matrix for region {region_name}: {str(e)}")
 
-async def process_matrix():
-    async def process_graph(region_id, region_name, graph_type):
+def process_matrix():
+    def process_calc_matrix(region_id, region_name, graph_type):
         matrix_exists, matrix_file = check_matrix_exists(region_id, graph_type)
 
         if matrix_exists:
@@ -57,12 +56,12 @@ async def process_matrix():
         else:
             logger.info(f"{graph_type.capitalize()} matrix for {region_name} not found. Creating...")
             graph = load_graph(region_id, graph_type)
-            points = await load_settlement_points(region_id)
+            points = load_settlement_points(region_id)
             local_crs = REGIONS_CRS[region_id]
             acc_matrix = calculate_accessibility_matrix(graph, points, local_crs, region_id, graph_type)
             to_pickle(acc_matrix, matrix_file)
             logger.success(f'{graph_type.capitalize()} matrix for {region_name} has been successfully created.')
 
     for region_id, region_name in REGIONS_DICT.items():
-        await process_graph(region_id, region_name, 'car')
-        await process_graph(region_id, region_name, 'inter')
+        process_calc_matrix(region_id, region_name, 'car')
+        process_calc_matrix(region_id, region_name, 'inter')
