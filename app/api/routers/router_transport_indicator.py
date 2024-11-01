@@ -96,16 +96,16 @@ def assess_territory(region_id : int, geojson : dict, regional_scenario_id : int
     # cri = grader.get_criteria(**criteria_args)
 
     cri = grader.get_criteria(
-    graded_terr=graded_territory,
-    points=settlement_points,
+    graded_terr=graded_territory.reset_index(),
+    points=settlement_points.reset_index(),
     polygons=polygons.reset_index(),
     adj_mx_drive=matrix_car,
     adj_mx_inter=matrix_inter,
     
-    **({"b_stops": bus_stops} if not bus_stops.empty else {}),
-    **({"r_stops": train_stations} if not train_stations.empty else {}),
-    **({"aero": airports} if not airports.empty else {}),
-    **({"ferry": ports} if not ports.empty else {})
+    **({"b_stops": bus_stops.reset_index()} if not bus_stops.empty else {}),
+    **({"r_stops": train_stations}.reset_index() if not train_stations.empty else {}),
+    **({"aero": airports.reset_index()} if not airports.empty else {}),
+    **({"ferry": ports.reset_index()} if not ports.empty else {})
 )
 
     return cri['overall_assessment'].tolist()
