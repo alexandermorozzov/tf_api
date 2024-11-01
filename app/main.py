@@ -22,7 +22,15 @@ logger.add(
     colorize=True
 )
 
-app = FastAPI()
+app = FastAPI(
+    title='Transport Frames API',
+    description='API for Transport Frames service, building transport frames of regions, calculating transport indicators for regions and specified project areas.', 
+    version='1.0.0',
+    contact={
+         'name': 'Alexander Morozov',
+         'email': 'alexandermorozzov@gmail.com'
+    }
+)
 
 origins = ["*"]
 
@@ -34,10 +42,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(router_interpretation_criteria.router, prefix="/api_v1")
-app.include_router(router_get_matrix.router, prefix="/api_v1")
-app.include_router(router_recalculate_matrix.router, prefix="/api_v1.1")
-app.include_router(router_transport_indicator.router, prefix='/api_v1.2')
+app.include_router(router_interpretation_criteria.router)
+app.include_router(router_get_matrix.router)
+app.include_router(router_recalculate_matrix.router)
+app.include_router(router_transport_indicator.router)
 
 def create_required_directories():
         required_dirs = ['matrices', 'frames', 'graphs']

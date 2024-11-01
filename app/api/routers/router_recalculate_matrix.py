@@ -6,7 +6,7 @@ from loguru import logger
 from app.api.utils.constants import REGIONS_DICT, REGIONS_CRS, DATA_PATH
 from app.api.utils.get_matrix import load_graph, load_settlement_points, to_pickle, calculate_accessibility_matrix
 
-router = APIRouter()
+router = APIRouter(tags=["Accessibility Matrix"])
 
 class RecalculateMatrixResponse(BaseModel):
     status: str

@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 from typing import List
 from transport_frames.frame_grader import advanced_grade
 
-router = APIRouter()
+router = APIRouter(tags=["Territory Calculation"])
 
 class InterpretationRequest(BaseModel):
     grade: float = Field(ge=0.0, le=5.0, title="Оценка в диапазоне от 0.0 до 5.0", examples=[5])

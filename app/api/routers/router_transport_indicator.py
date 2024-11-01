@@ -11,7 +11,7 @@ from app.api.utils.get_matrix import load_settlement_points
 
 ADM_UNIT_TERRITORY_TYPE_ID = 4
 
-router = APIRouter()
+router = APIRouter(tags=["Territory Calculation"])
 
 def load_frame(region_id: int) -> nx.MultiDiGraph:
     frame_path = os.path.join(DATA_PATH, f'frames/{region_id}_frame.pickle')
@@ -76,36 +76,17 @@ def assess_territory(region_id : int, geojson : dict, regional_scenario_id : int
     local_crs = REGIONS_CRS[region_id]
     grader = AdvancedGrader(local_crs)
 
-    # criteria_args = {
-    #     "graded_terr": graded_territory,
-    #     "points": settlement_points,
-    #     "polygons": polygons,
-    #     "adj_mx_drive": matrix_car,
-    #     "adj_mx_inter": matrix_inter
-    # }
-
-    # if not bus_stops.empty:
-    #     criteria_args["b_stops"] = bus_stops
-    # if not train_stations.empty:
-    #     criteria_args["r_stops"] = train_stations
-    # if not airports.empty:
-    #     criteria_args["aero"] = airports
-    # if not ports.empty:
-    #     criteria_args["ferry"] = ports
-
-    # cri = grader.get_criteria(**criteria_args)
-
     cri = grader.get_criteria(
-    graded_terr=graded_territory.reset_index(),
-    points=settlement_points.reset_index(),
-    polygons=polygons.reset_index(),
+    graded_terr=graded_territory.reset_index(drop=True),
+    points=settlement_points.reset_index(drop=True),
+    polygons=polygons.reset_index(drop=True),
     adj_mx_drive=matrix_car,
     adj_mx_inter=matrix_inter,
     
-    **({"b_stops": bus_stops.reset_index()} if not bus_stops.empty else {}),
-    **({"r_stops": train_stations}.reset_index() if not train_stations.empty else {}),
-    **({"aero": airports.reset_index()} if not airports.empty else {}),
-    **({"ferry": ports.reset_index()} if not ports.empty else {})
+    **({"b_stops": bus_stops.reset_index(drop=True)} if not bus_stops.empty else {}),
+    **({"r_stops": train_stations.reset_index(drop=True)} if not train_stations.empty else {}),
+    **({"aero": airports.reset_index(drop=True)} if not airports.empty else {}),
+    **({"ferry": ports.reset_index(drop=True)} if not ports.empty else {})
 )
 
     return cri['overall_assessment'].tolist()

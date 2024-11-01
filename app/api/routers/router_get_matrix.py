@@ -6,7 +6,7 @@ import geopandas as gpd
 import pickle
 from app.api.utils.constants import DATA_PATH
 
-router = APIRouter()
+router = APIRouter(tags=["Accessibility Matrix"])
 
 class AccessibilityMatrixModel(BaseModel):
     index: list[int]
