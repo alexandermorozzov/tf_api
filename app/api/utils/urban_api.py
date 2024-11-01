@@ -124,34 +124,39 @@ def get_service_objects(region_id : int, st_id : int):
   return gpd.GeoDataFrame(results, crs=4326)
 
 def get_bus_stops(region_id : int):
-  results = get_physical_objects(region_id, 10)
-  if not results:  
+  try:
+    results = get_physical_objects(region_id, 10)
+    return gpd.GeoDataFrame(results, crs=4326)
+  except:
     return gpd.GeoDataFrame(geometry=[], crs=4326)
-  return gpd.GeoDataFrame(results, crs=4326 )
 
 def get_train_stations(region_id : int):
-  results = get_physical_objects(region_id, 30)
-  if not results:
+  try:
+    results = get_physical_objects(region_id, 30)
+    return gpd.GeoDataFrame(results, crs=4326)
+  except:
     return gpd.GeoDataFrame(geometry=[], crs=4326)
-  return gpd.GeoDataFrame(results, crs=4326)
 
 def get_airports(region_id : int):
-  results = get_physical_objects(region_id, 82)
-  if not results: 
+  try:
+    results = get_physical_objects(region_id, 82)
+    return gpd.GeoDataFrame(results, crs=4326)
+  except:
     return gpd.GeoDataFrame(geometry=[], crs=4326)
-  return gpd.GeoDataFrame(results, crs=4326)
 
 def get_ports(region_id : int):
-  results = get_physical_objects(region_id, 28)
-  if not results:
+  try:
+    results = get_physical_objects(region_id, 28)
+    return gpd.GeoDataFrame(results, crs=4326)
+  except:
     return gpd.GeoDataFrame(geometry=[], crs=4326)
-  return gpd.GeoDataFrame(results, crs=4326)
 
 def get_water_objects(region_id : int):
-  results = get_physical_objects(region_id, 2)
-  if not results:
+  try:
+    results = get_physical_objects(region_id, 2)
+    return gpd.GeoDataFrame(results, crs=4326)
+  except:
     return gpd.GeoDataFrame(geometry=[], crs=4326)
-  return gpd.GeoDataFrame(results, crs=4326)
 
 #пока вроде их нет
 def get_protected_areas(region_id : int):

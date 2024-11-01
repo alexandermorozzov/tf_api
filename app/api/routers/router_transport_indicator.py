@@ -34,8 +34,8 @@ def load_matrices(region_id: int):
 
 def get_adm_units(gdfs: dict[int, gpd.GeoDataFrame]) -> gpd.GeoDataFrame:
     for gdf in gdfs.values():
-        territory_types_ids = gdf.territory_type_id.unique()
-        if ADM_UNIT_TERRITORY_TYPE_ID in territory_types_ids:
+        levels = gdf.level.unique()
+        if ADM_UNIT_TERRITORY_TYPE_ID in levels:
             return gdf
     return None
 
@@ -66,7 +66,7 @@ def assess_territory(region_id : int, geojson : dict, regional_scenario_id : int
 
     gdfs_dict = get_polygons(region_id)
     polygons = get_adm_units(gdfs_dict)
-    polygons['index'] = polygons.index
+    # polygons['index'] = polygons.index
 
     if polygons is None:
         raise HTTPException(status_code=404, detail="Administrative units not found")
@@ -98,7 +98,7 @@ def assess_territory(region_id : int, geojson : dict, regional_scenario_id : int
     cri = grader.get_criteria(
     graded_terr=graded_territory,
     points=settlement_points,
-    polygons=polygons,
+    polygons=polygons.reset_index(),
     adj_mx_drive=matrix_car,
     adj_mx_inter=matrix_inter,
     
