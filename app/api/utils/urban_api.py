@@ -43,6 +43,14 @@ def _fetch_territories(region_id : int) -> tuple[dict[int, gpd.GeoDataFrame], gp
   # fetch population
   return {level:units_gdf[units_gdf.level == level] for level in levels}, towns_gdf
 
+def get_scenario_by_id(scenario_id : int, token : str):
+    res = requests.get(URBAN_API + f'/api/v1/scenarios/{scenario_id}', headers={'Authorization': f'Bearer {token}'})
+    return res.json()
+
+def get_project_by_id(project_id : int, token : str):
+    res = requests.get(URBAN_API + f'/api/v1/projects/{project_id}/territory_info', headers={'Authorization': f'Bearer {token}'})
+    return res.json()
+
 # methods relocated from idu_clients:
 
 def get_country_regions(country_id : int) -> pd.DataFrame: # returns region districts

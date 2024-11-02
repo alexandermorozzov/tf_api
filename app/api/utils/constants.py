@@ -25,3 +25,5 @@ REGIONS_CRS = {
 }
 
 DATA_PATH = os.path.abspath('app/data')
+
+RESPONSE_MESSAGE = 'Assessment started'
