@@ -1,13 +1,21 @@
+from datetime import date
 import requests
 import shapely
 import json
 import pandas as pd
 import geopandas as gpd
+import os
 
-URBAN_API = 'http://10.32.1.107:5300'
+if 'URBAN_API' in os.environ:
+  URBAN_API = os.environ['URBAN_API']
+else:
+  URBAN_API = 'https://urban-api.idu.kanootoko.org' #'http://10.32.1.107:5300'  https://urban-api-107.idu.kanootoko.org 
+  # URBAN_API = 'http://10.32.1.107:5300' # https://urban-api-107.idu.kanootoko.org 'https://urban-api.idu.kanootoko.org'
 PAGE_SIZE = 10000
 CRS = 4326
 POPULATION_COUNT_INDICATOR_ID = 1
+INDICATOR_VALUE_TYPE = 'real'
+INDICATOR_INFORMATION_SOURCE = 'transport_frames'
 
 # updated territories methods
 
@@ -23,33 +31,63 @@ def get_territories(parent_id : int | None = None, all_levels = False, geometry 
   df = pd.DataFrame(res_json)
   return df.set_index('territory_id', drop=True)
 
-def get_territories_population(territories_gdf : gpd.GeoDataFrame, regional_scenario_id : int | None = None):
-  res = requests.get(f'{URBAN_API}/api/v1/indicator/{POPULATION_COUNT_INDICATOR_ID}/values')
-  res_df = pd.DataFrame(res.json())
-  res_df = res_df[res_df['territory_id'].isin(territories_gdf.index)]
-  res_df = res_df.groupby('territory_id').agg({'value': 'last'}).rename(columns={'value':'population'})
-  return territories_gdf[['geometry']].merge(res_df, how='left', left_index=True, right_index=True)
-
 def _fetch_territories(region_id : int) -> tuple[dict[int, gpd.GeoDataFrame], gpd.GeoDataFrame]:
   # fetch towns
   territories_gdf = get_territories(region_id, all_levels = True, geometry=True)
-  territories_gdf['was_point'] = territories_gdf['properties'].apply(lambda p : p['was_point'] if 'was_point' in p else False)
+  # territories_gdf['was_point'] = territories_gdf['properties'].apply(lambda p : p['was_point'] if 'was_point' in p else False)
   #filter towns gdf
-  towns_gdf = territories_gdf[territories_gdf['was_point']]
+  towns_gdf = territories_gdf[territories_gdf['is_city']]
   # towns_gdf = await get_territories_population(towns_gdf) # раскоментить если нужно население, если индикатора нет, там будет nan
   #filter units gdf
-  units_gdf = territories_gdf[~territories_gdf['was_point']]
+  units_gdf = territories_gdf[~territories_gdf['is_city']]
   levels = units_gdf['level'].unique()
   # fetch population
   return {level:units_gdf[units_gdf.level == level] for level in levels}, towns_gdf
+
+def fetch_territories(region_id : int, regional_scenario_id : int | None = None, population : bool = True, geometry = True) -> tuple[dict[int, gpd.GeoDataFrame], gpd.GeoDataFrame]:
+    """
+    Fetch region territories for specific regional_scenario with population (optional) and geometry (optional)
+    """
+    # fetch region
+    regions_gdf = get_regions()
+    region_gdf = regions_gdf[regions_gdf.index == region_id]
+    units_gdfs = {2 : region_gdf}
+    # fetch towns
+    territories_gdf = get_territories(region_id, all_levels = True, geometry=geometry)
+    # territories_gdf['was_point'] = territories_gdf['properties'].apply(lambda p : p['was_point'] if 'was_point' in p else False)
+    #filter towns gdf
+    towns_gdf = territories_gdf[territories_gdf['is_city']]
+    #filter units gdf
+    units_gdf = territories_gdf[~territories_gdf['is_city']]
+    levels = units_gdf['level'].unique()
+    # fetch population
+    for level in levels:
+        units_gdfs[level] = units_gdf[units_gdf.level == level]
+    return units_gdfs, towns_gdf
+
+def get_admin_centers(units_gdfs, towns_gdf, level : int) -> gpd.GeoDataFrame:
+    admin_centers_ids = units_gdfs[level].admin_center.apply(int)
+    return towns_gdf[towns_gdf.index.isin(admin_centers_ids)]
 
 def get_scenario_by_id(scenario_id : int, token : str):
     res = requests.get(URBAN_API + f'/api/v1/scenarios/{scenario_id}', headers={'Authorization': f'Bearer {token}'})
     return res.json()
 
 def get_project_by_id(project_id : int, token : str):
-    res = requests.get(URBAN_API + f'/api/v1/projects/{project_id}/territory_info', headers={'Authorization': f'Bearer {token}'})
+    res = requests.get(URBAN_API + f'/api/v1/projects/{project_id}/territory', headers={'Authorization': f'Bearer {token}'})
     return res.json()
+
+def post_scenario_indicator(indicator_id : int, scenario_id : int, value : float, token : str):
+    res = requests.post(URBAN_API + f'/api/v1/scenarios/{scenario_id}/indicators_values', headers={'Authorization': f'Bearer {token}'}, json={
+        'indicator_id': indicator_id,
+        'scenario_id': scenario_id,
+        'date_type': 'year',
+        'date_value': date.today().isoformat(),
+        'value': value,
+        'value_type': INDICATOR_VALUE_TYPE,
+        'information_source': INDICATOR_INFORMATION_SOURCE
+    })
+    return res
 
 # methods relocated from idu_clients:
 
@@ -147,11 +185,18 @@ def get_train_stations(region_id : int):
 
 def get_airports(region_id : int):
   try:
-    results = get_physical_objects(region_id, 82)
+    results = get_service_objects(region_id, 82)
     return gpd.GeoDataFrame(results, crs=4326)
   except:
     return gpd.GeoDataFrame(geometry=[], crs=4326)
-
+  
+def get_fuel_stations(region_id : int):
+  try:
+    results = get_service_objects(region_id, 84)
+    return gpd.GeoDataFrame(results, crs=4326)
+  except:
+    return gpd.GeoDataFrame(geometry=[], crs=4326)
+  
 def get_ports(region_id : int):
   try:
     results = get_physical_objects(region_id, 28)
@@ -160,12 +205,24 @@ def get_ports(region_id : int):
     return gpd.GeoDataFrame(geometry=[], crs=4326)
 
 def get_water_objects(region_id : int):
-  try:
-    results = get_physical_objects(region_id, 2)
-    return gpd.GeoDataFrame(results, crs=4326)
-  except:
-    return gpd.GeoDataFrame(geometry=[], crs=4326)
+  # try:
+  #   results = get_physical_objects(region_id, 2)
+  #   return gpd.GeoDataFrame(results, crs=4326)
+  # except:
+  return gpd.GeoDataFrame(geometry=[], crs=4326)
 
-#пока вроде их нет
+#FIXME 
 def get_protected_areas(region_id : int):
+  return gpd.GeoDataFrame(geometry=[], crs=4326)
+
+def get_train_paths(region_id : int):
+  return gpd.GeoDataFrame(geometry=[], crs=4326)
+
+def get_bus_routes(region_id : int):
+  return gpd.GeoDataFrame(geometry=[], crs=4326)
+
+def get_international_airports(region_id : int):
+  return gpd.GeoDataFrame(geometry=[], crs=4326)
+
+def get_region_admin_center(region_id : int):
   return None

@@ -24,7 +24,7 @@ def create_graph(region_id : int, polygon : gpd.GeoDataFrame):
     # for _ in range(0, MAX_TRIES):
     while True:
         try:
-            g = Graph.from_polygon(polygon, crs=f'{crs}')
+            g = Graph.from_polygon(polygon, crs=crs)
             return g.graph
         except json.decoder.JSONDecodeError as e:
             logger.error(f"Error decoding JSON response for region {region_id}: {e}. Retrying...")
@@ -53,6 +53,7 @@ def process_graph():
                 polygon = gpd.read_parquet(polygon_file)
 
                 graph = create_graph(region_id, polygon)
+                graph.graph['crs'] = int(graph.graph['crs'])
                 graph_file = os.path.join(DATA_PATH, f'graphs/{region_id}_car_graph.pickle')
                 to_pickle(graph, graph_file)
                 

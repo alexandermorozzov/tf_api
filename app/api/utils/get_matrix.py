@@ -5,7 +5,7 @@ import pickle
 from loguru import logger
 from shapely.geometry import Point
 from app.api.utils.constants import REGIONS_DICT, REGIONS_CRS, DATA_PATH
-from app.api.utils.urban_api import get_region_territories, _fetch_territories
+from app.api.utils.urban_api import fetch_territories
 from transport_frames.indicators.utils import availability_matrix
 
 def load_graph(region_id: int, graph_type: str):
@@ -24,7 +24,7 @@ def check_matrix_exists(region_id: int, matrix_type: str):
     return os.path.exists(matrix_file), matrix_file
 
 def load_settlement_points(region_id: int) -> gpd.GeoDataFrame:
-    tuple, towns_points = _fetch_territories(region_id)
+    tuple, towns_points = fetch_territories(region_id)
     towns_points['geometry'] = towns_points['geometry'].representative_point()
     return towns_points
 
