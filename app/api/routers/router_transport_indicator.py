@@ -7,10 +7,10 @@ import pandas as pd
 import geopandas as gpd
 import networkx as nx
 import pickle
+import momepy
 from transport_frames.framebuilder.frame import Frame
 from transport_frames.frame_grader.advanced_grade import AdvancedGrader
 from transport_frames.indicators.indicator_terr import indicator_territory
-from transport_frames.indicators.indicator_area import indicator_area, preprocess_service_accessibility
 from transport_frames.indicators.utils import create_service_dict
 from app.api.utils.constants import REGIONS_DICT, REGIONS_CRS, DATA_PATH, RESPONSE_MESSAGE
 import app.api.utils.urban_api as ua
@@ -183,8 +183,6 @@ def _assess_indicator(region_id : int, projects_gdf : gpd.GeoDataFrame, regional
 
     units_gdfs, towns_gdfs = ua.fetch_territories(region_id)
     towns_gdfs['geometry'] = towns_gdfs['geometry'].representative_point()
-    # district_points = ua.get_region_admin_center(region_id)
-    # settlement_points = ua.get_region_admin_center(region_id)
     district_points = ua.get_admin_centers(units_gdfs,towns_gdfs,3)
     settlement_points = ua.get_admin_centers(units_gdfs,towns_gdfs,4)
     districts_polygons = units_gdfs[3]
@@ -212,7 +210,8 @@ def assess_geojson(region_id : int, geojson : dict, regional_scenario_id : int |
     return cri['overall_assessment'].tolist()
 
 def _get_project_geometry(project_scenario_id : int, token : str):
-    project_id = ua.get_scenario_by_id(project_scenario_id, token)['project']['project_id']
+    scenario_info = ua.get_scenario_by_id(project_scenario_id, token)
+    project_id = scenario_info['project']['project_id']
     project_info = ua.get_project_by_id(project_id, token)
     geometry_json = json.dumps(project_info['geometry'])
     return shapely.from_geojson(geometry_json)
@@ -221,7 +220,7 @@ def _get_regional_scenario_id(project_scenario_id : int, token : str):
     return None
 
 def safe_cast(value, to_type, default=None):
-    if pd.isna(value):  # Проверяем на NaN
+    if pd.isna(value): 
         return default
     return to_type(value)
 
@@ -236,20 +235,20 @@ def _save_indicators(project_scenario_id : int, cri : gpd.GeoDataFrame, ind : gp
         Indicator.TO_REGION_ADMIN_CENTER: safe_cast(result_ind['to_region_admin_center_km'], float),
         Indicator.TO_REG1: safe_cast(result_ind['to_reg_1_km'], float),
         Indicator.FUEL_STATIONS_ACCESSIBILITY: safe_cast(result_ind['fuel_stations_accessibility_min'], float),
-        Indicator.NUMBER_OF_FUEL_STATIONS: safe_cast(result_ind['number_of_fuel_stations'], float),
+        Indicator.NUMBER_OF_FUEL_STATIONS: safe_cast(result_ind['number_of_fuel_stations'], int),
         Indicator.LOCAL_AERODROME_ACCESSIBILITY: safe_cast(result_ind['local_aerodrome_accessibility_min'], float),
-        Indicator.NUMBER_OF_LOCAL_AERODROME: safe_cast(result_ind['number_of_local_aerodrome'], float),
+        Indicator.NUMBER_OF_LOCAL_AERODROME: safe_cast(result_ind['number_of_local_aerodrome'], int),
         Indicator.INTERNATIONAL_AERODROME_ACCESSIBILITY: safe_cast(result_ind['international_aerodrome_accessibility_min'], float),
         Indicator.NUMBER_OF_INTERNATIONAL_AERODROME: safe_cast(result_ind['number_of_international_aerodrome'], int),
         Indicator.RAILWAY_STATIONS_ACCESSIBILITY: safe_cast(result_ind['railway_stations_accessibility_min'], float),
-        Indicator.NUMBER_OF_RAILWAY_STATIONS: safe_cast(result_ind['number_of_railway_stations'], float),
+        Indicator.NUMBER_OF_RAILWAY_STATIONS: safe_cast(result_ind['number_of_railway_stations'], int),
         # Indicator.PORTS_ACCESSIBILITY: safe_cast(result_ind['ports_accessibility_min'], float),
         Indicator.NUMBER_OF_PORTS: safe_cast(result_ind['number_of_ports'], int),
         # Indicator.BUS_STOPS_ACCESSIBILITY: safe_cast(result_ind['bus_stops_accessibility_min'], float),
         Indicator.NUMBER_OF_BUS_STOPS: safe_cast(result_ind['number_of_bus_stops'], int),
         # Indicator.NUMBER_OF_WATER_OBJECTS: safe_cast(result_ind['number_of_water_objects'], float),
         Indicator.WATER_OBJECTS_ACCESSIBILITY: safe_cast(result_ind['water_objects_accessibility_min'], float),
-        # Indicator.NUMBER_OF_NATURE_RESERVE: safe_cast(result_ind['number_of_nature_reserve'], float),
+        # Indicator.NUMBER_OF_NATURE_RESERVE: safe_cast(result_ind['number_of_nature_reserve'], int),
         Indicator.NATURE_RESERVE_ACCESSIBILITY: safe_cast(result_ind['nature_reserve_accessibility_min'], float),
         Indicator.TRAIN_PATHS_LENGTH: safe_cast(result_ind['train_path_length_km'], float),
         Indicator.NUMBER_OF_BUS_ROUTES: safe_cast(result_ind['number_of_bus_routes'], int),
@@ -266,8 +265,9 @@ def _save_indicators(project_scenario_id : int, cri : gpd.GeoDataFrame, ind : gp
     for i in result_cri.index:
         logger.success(f'{i} : {result_cri.loc[i]}')
     for i in result_ind.index:
-        logger.success(f'{i} : {result_cri.loc[i]}')
+        logger.success(f'{i} : {result_ind.loc[i]}')
     # { scenario_id : project_scenario_id, commentary : my_interpr, value : foobar }
+    return logger.success('Calculations completed')
 
 def _assess_and_save(region_id : int, project_scenario_id : int, token : str):
     project_geometry = _get_project_geometry(project_scenario_id, token)

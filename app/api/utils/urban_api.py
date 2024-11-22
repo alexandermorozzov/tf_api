@@ -1,10 +1,14 @@
-from datetime import date
+from datetime import date, datetime
 import requests
 import shapely
 import json
 import pandas as pd
 import geopandas as gpd
 import os
+import networkx as nx
+import momepy
+import pickle
+from app.api.utils.constants import REGIONS_DICT, REGIONS_CRS, DATA_PATH
 
 if 'URBAN_API' in os.environ:
   URBAN_API = os.environ['URBAN_API']
@@ -77,16 +81,31 @@ def get_project_by_id(project_id : int, token : str):
     res = requests.get(URBAN_API + f'/api/v1/projects/{project_id}/territory', headers={'Authorization': f'Bearer {token}'})
     return res.json()
 
-def post_scenario_indicator(indicator_id : int, scenario_id : int, value : float, token : str):
-    res = requests.post(URBAN_API + f'/api/v1/scenarios/{scenario_id}/indicators_values', headers={'Authorization': f'Bearer {token}'}, json={
+def post_scenario_indicator(indicator_id : int, scenario_id : int, value : float, token : str, comment : str = '-'):
+    res = requests.post(URBAN_API + f'/api/v1/scenarios/indicators_values', headers={'Authorization': f'Bearer {token}'}, json={
         'indicator_id': indicator_id,
         'scenario_id': scenario_id,
-        'date_type': 'year',
-        'date_value': date.today().isoformat(),
+        'territory_id': None,
+        'hexagon_id': None,
         'value': value,
-        'value_type': INDICATOR_VALUE_TYPE,
+        'comment': comment,
         'information_source': INDICATOR_INFORMATION_SOURCE
     })
+    return res
+
+def post_territory_indicator(indicator_id : int, territory_id : int, value : float):
+    res = requests.post(
+        f"{URBAN_API}/api/v1/indicator_value",
+        json={
+          "indicator_id": indicator_id,
+          "territory_id": territory_id,
+          "date_type": "day",
+          "date_value": datetime.now().strftime("%Y-%m-%d"),
+          "value": value,
+          "value_type": "real",
+          "information_source": INDICATOR_INFORMATION_SOURCE
+      }
+    )
     return res
 
 # methods relocated from idu_clients:
@@ -209,7 +228,14 @@ def get_water_objects(region_id : int):
   #   results = get_physical_objects(region_id, 2)
   #   return gpd.GeoDataFrame(results, crs=4326)
   # except:
-  return gpd.GeoDataFrame(geometry=[], crs=4326)
+    return gpd.GeoDataFrame(geometry=[], crs=4326)
+
+def get_bus_routes(region_id : int):
+  inter = load_inter(region_id)
+  n,e = momepy.nx_to_gdf(inter)
+  bus_routes = e[e['type']=='bus']
+  return bus_routes
+
 
 #FIXME 
 def get_protected_areas(region_id : int):
@@ -218,11 +244,21 @@ def get_protected_areas(region_id : int):
 def get_train_paths(region_id : int):
   return gpd.GeoDataFrame(geometry=[], crs=4326)
 
-def get_bus_routes(region_id : int):
-  return gpd.GeoDataFrame(geometry=[], crs=4326)
-
 def get_international_airports(region_id : int):
   return gpd.GeoDataFrame(geometry=[], crs=4326)
 
 def get_region_admin_center(region_id : int):
   return None
+
+# Utils
+
+def load_inter(region_id: int) -> nx.Graph:
+    inter_file = os.path.join(DATA_PATH, f'graphs/{region_id}_inter_graph.pickle')
+    if not os.path.exists(inter_file):
+        region_name = REGIONS_DICT.get(region_id, f"Region ID {region_id}")
+        raise FileNotFoundError(f"Inter graph for {region_name} not found.")
+    
+    with open(inter_file, "rb") as f:
+        inter = pickle.load(f)
+
+    return inter
