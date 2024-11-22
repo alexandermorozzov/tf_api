@@ -227,6 +227,8 @@ def safe_cast(value, to_type, default=None):
 def _save_indicators(project_scenario_id : int, cri : gpd.GeoDataFrame, ind : gpd.GeoDataFrame, token : str):
     ... # im saving something
     # интерпретацию сохранять в поле commentary
+    text = AdvancedGrader.interpret_gdf(cri)   
+    overall_assessment_comment = str.join(' ', text[0][1])
     result_cri = cri.iloc[0]
     result_ind = ind.iloc[0]
     indicators = {
@@ -259,7 +261,8 @@ def _save_indicators(project_scenario_id : int, cri : gpd.GeoDataFrame, ind : gp
 
     for indicator, value in indicators.items():
         indicator_id = INDICATORS_IDS[indicator]
-        ua.post_scenario_indicator(indicator_id, project_scenario_id, value, token)
+        comment = overall_assessment_comment if indicator == Indicator.OVERALL_ASSESSMENT else "-"
+        ua.post_scenario_indicator(indicator_id, project_scenario_id, value, token, comment)
         logger.success(f'ind={indicator} id={indicator_id} v={value}')
 
     for i in result_cri.index:
