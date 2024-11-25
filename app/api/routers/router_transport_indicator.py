@@ -7,7 +7,6 @@ import pandas as pd
 import geopandas as gpd
 import networkx as nx
 import pickle
-import momepy
 from transport_frames.framebuilder.frame import Frame
 from transport_frames.frame_grader.advanced_grade import AdvancedGrader
 from transport_frames.indicators.indicator_terr import indicator_territory
