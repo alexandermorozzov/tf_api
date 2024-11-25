@@ -43,11 +43,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(router_transport_indicator_region.router)
 app.include_router(router_interpretation_criteria.router)
 app.include_router(router_get_matrix.router)
 app.include_router(router_recalculate_matrix.router)
 app.include_router(router_transport_indicator.router)
-app.include_router(router_transport_indicator_region.router)
 
 def create_required_directories():
         required_dirs = ['matrices', 'frames', 'graphs']
