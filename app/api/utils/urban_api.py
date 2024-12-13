@@ -82,19 +82,20 @@ def get_project_by_id(project_id : int, token : str):
     return res.json()
 
 def post_scenario_indicator(indicator_id : int, scenario_id : int, value : float, token : str, comment : str = '-'):
-    res = requests.post(URBAN_API + f'/api/v1/scenarios/indicators_values', headers={'Authorization': f'Bearer {token}'}, json={
+    res = requests.put(URBAN_API + f'/api/v1/scenarios/indicators_values', headers={'Authorization': f'Bearer {token}'}, json={
         'indicator_id': indicator_id,
         'scenario_id': scenario_id,
         'territory_id': None,
         'hexagon_id': None,
         'value': value,
         'comment': comment,
-        'information_source': INDICATOR_INFORMATION_SOURCE
+        'information_source': INDICATOR_INFORMATION_SOURCE,
+        'properties' : {}
     })
     return res
 
 def post_territory_indicator(indicator_id : int, territory_id : int, value : float):
-    res = requests.post(
+    res = requests.put(
         f"{URBAN_API}/api/v1/indicator_value",
         json={
           "indicator_id": indicator_id,
@@ -224,10 +225,10 @@ def get_ports(region_id : int):
     return gpd.GeoDataFrame(geometry=[], crs=4326)
 
 def get_water_objects(region_id : int):
-  # try:
-  #   results = get_physical_objects(region_id, 2)
-  #   return gpd.GeoDataFrame(results, crs=4326)
-  # except:
+  try:
+    results = get_physical_objects(region_id, 2)
+    return gpd.GeoDataFrame(results, crs=4326)
+  except:
     return gpd.GeoDataFrame(geometry=[], crs=4326)
 
 def get_bus_routes(region_id : int):
